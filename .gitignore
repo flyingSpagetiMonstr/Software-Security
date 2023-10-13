@@ -1,9 +1,11 @@
-test.*
+test*
+output.*
 
 *.exe
 *.txt
-*.cmd
+# *.cmd
 
 .vscode/
 
-question.*
+# question.*
+note.*

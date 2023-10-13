@@ -14,12 +14,9 @@
 // cat to newfile
 // compare
 
-
-// reserve + alloc
-
-void read(BYTE buffer[SECTOR_SIZE], HANDLE disk, int offset_start, int sector_offset/*from 0*/);
-uint32_t data_parse(BYTE buffer[SECTOR_SIZE], int byte_n);
-void print_buffer(BYTE buffer[SECTOR_SIZE]);
+void read(BYTE *buffer, int size/*by Byte*/, HANDLE disk, int offset_start, int sector_offset/*from 0*/);
+uint32_t data_parse(BYTE *buffer, int byte_n);
+void print_buffer(BYTE *buffer);
 
 
 int main() {
@@ -32,9 +29,10 @@ int main() {
     }
 
     BYTE buffer[SECTOR_SIZE] = {0};
-    read(buffer, disk, FILE_BEGIN, 0); // read DBR
+    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, 0); // read DBR
 
     uint8_t sector_per_cluster = data_parse(buffer + 0x0D, 1);
+    int cluster_size = sector_per_cluster * SECTOR_SIZE;
     uint16_t reserved_sector_n = data_parse(buffer + 0x0E, 2);
     uint8_t fat_n = data_parse(buffer + 0x10, 1);
     uint32_t fat_size = data_parse(buffer + 0x24, 4); // in sector
@@ -42,7 +40,7 @@ int main() {
 
     int directory_sector_no = reserved_sector_n + fat_n * fat_size;
 
-    read(buffer, disk, FILE_BEGIN, directory_sector_no); // read root directory
+    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, directory_sector_no); // read root directory
 
     BYTE entry[DIRECTORY_SIZE] = {0}; // size of directory entry is 32-byte 
     BYTE filename[SHORT_FILENAME_LEN + 1] = {0};
@@ -52,40 +50,45 @@ int main() {
         memcpy(filename, entry, SHORT_FILENAME_LEN);
         if (strcmp(filename, "WANGQUAN") == 0)
         {
-            puts("File entry found");
+            puts("File entry found.");
             break;
         }
     }
 
     uint16_t high = data_parse(entry + 0x14, 2);
     uint16_t low = data_parse(entry + 0x1A, 2);
-    uint32_t cluster_no = (((uint32_t)high) << (16*8)) + low;
+    uint32_t cluster_no = (((uint32_t)high) << 16) + low;
     uint32_t file_size = data_parse(entry + 0x1C, 4); // in Byte
 
     // assert((cluster_no+1)*FAT_ENTRY_SIZE <= SECTOR_SIZE);
-    read(buffer, disk, FILE_BEGIN, reserved_sector_n); // read fat
-    print_buffer(buffer);
+    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, reserved_sector_n); // read fat
+
+    BYTE *content = (BYTE *)malloc((file_size/cluster_size + 1)*cluster_size);
+    BYTE *ptr = content;
 
     while(cluster_no != 0x0FFFFFFF)
     {
-        printf("%08X\n", cluster_no);
         assert((cluster_no+1)*FAT_ENTRY_SIZE <= SECTOR_SIZE);
         // root = directory_sector_no
         // sector_offset = sector_per_cluster * cluster_no
-        // content_sector = directory_sector_no + sector_per_cluster * cluster_no;
-        // read(buffer, disk, FILE_BEGIN, reserved_sector_n); // read fat
+        int content_sector = directory_sector_no + sector_per_cluster * (cluster_no -root_cluster_no);
+        read(ptr, sector_per_cluster*SECTOR_SIZE, disk, FILE_BEGIN, content_sector); // read file content
+        ptr += sector_per_cluster*SECTOR_SIZE;
         cluster_no = data_parse(buffer + cluster_no*FAT_ENTRY_SIZE, FAT_ENTRY_SIZE);
     }
-    printf("%08X\n", cluster_no);
 
-    
+    FILE* output = fopen("output.txt", "wb");
+    fwrite(content, file_size, 1, output);
+    fclose(output);
+    puts("File recreated.");
 
-    
+    free(content);
     CloseHandle(disk);
+    puts("All is done.");
     return 0;
 }
 
-void read(BYTE buffer[SECTOR_SIZE], HANDLE disk, int offset_start, int sector_offset/*from 0*/)
+void read(BYTE *buffer, int size/*by Byte*/, HANDLE disk, int offset_start, int sector_offset/*from 0*/)
 {
     LONG offset = sector_offset * SECTOR_SIZE;
     DWORD bytesRead = 0;
@@ -95,7 +98,7 @@ void read(BYTE buffer[SECTOR_SIZE], HANDLE disk, int offset_start, int sector_of
         puts("Err when set pointer");
         exit(1);
     }
-    if (!ReadFile(disk, buffer, SECTOR_SIZE, &bytesRead, NULL)) 
+    if (!ReadFile(disk, buffer, size, &bytesRead, NULL)) 
     {
         puts("Failed to read from the disk.");
         CloseHandle(disk);
@@ -113,7 +116,7 @@ uint32_t data_parse(BYTE *buffer, int byte_n)
     return result;
 }
 
-void print_buffer(BYTE buffer[SECTOR_SIZE])
+void print_buffer(BYTE *buffer)
 {
     for (size_t i = 0; i < SECTOR_SIZE; i++)
     {
@@ -122,6 +125,7 @@ void print_buffer(BYTE buffer[SECTOR_SIZE])
             puts("");
         }
         printf("%02X ", buffer[i]); 
+        // printf("%c", buffer[i]); 
     }
     puts("");
 }
