@@ -29,7 +29,9 @@ int main() {
     }
 
     BYTE buffer[SECTOR_SIZE] = {0};
-    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, 0); // read DBR
+
+    // # read DBR
+    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, 0); 
 
     uint8_t sector_per_cluster = data_parse(buffer + 0x0D, 1);
     int cluster_size = sector_per_cluster * SECTOR_SIZE;
@@ -40,7 +42,8 @@ int main() {
 
     int directory_sector_no = reserved_sector_n + fat_n * fat_size;
 
-    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, directory_sector_no); // read root directory
+    // # read root directory
+    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, directory_sector_no); 
 
     BYTE entry[DIRECTORY_SIZE] = {0}; // size of directory entry is 32-byte 
     BYTE filename[SHORT_FILENAME_LEN + 1] = {0};
@@ -61,7 +64,8 @@ int main() {
     uint32_t file_size = data_parse(entry + 0x1C, 4); // in Byte
 
     // assert((cluster_no+1)*FAT_ENTRY_SIZE <= SECTOR_SIZE);
-    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, reserved_sector_n); // read fat
+    // # read fat
+    read(buffer, SECTOR_SIZE, disk, FILE_BEGIN, reserved_sector_n); 
 
     BYTE *content = (BYTE *)malloc((file_size/cluster_size + 1)*cluster_size);
     BYTE *ptr = content;
@@ -72,7 +76,8 @@ int main() {
         // root = directory_sector_no
         // sector_offset = sector_per_cluster * cluster_no
         int content_sector = directory_sector_no + sector_per_cluster * (cluster_no -root_cluster_no);
-        read(ptr, sector_per_cluster*SECTOR_SIZE, disk, FILE_BEGIN, content_sector); // read file content
+        // # read file content
+        read(ptr, sector_per_cluster*SECTOR_SIZE, disk, FILE_BEGIN, content_sector); 
         ptr += sector_per_cluster*SECTOR_SIZE;
         cluster_no = data_parse(buffer + cluster_no*FAT_ENTRY_SIZE, FAT_ENTRY_SIZE);
     }
