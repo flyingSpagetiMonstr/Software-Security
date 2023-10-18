@@ -3,9 +3,12 @@ output.*
 
 *.exe
 *.txt
+
 # *.cmd
 
 .vscode/
+
+submit/
 
 # question.*
 note.*

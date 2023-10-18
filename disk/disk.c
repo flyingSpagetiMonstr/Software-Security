@@ -7,7 +7,11 @@
 #define SECTOR_SIZE 512 // Byte
 #define DIRECTORY_SIZE 32 // Byte
 #define SHORT_FILENAME_LEN 8 // Byte
+#define SUFFIX_LEN 3 // Byte
 #define FAT_ENTRY_SIZE 4 // Byte
+
+#define FILE_NAME "WANGQUAN"
+#define FILE_SUFFIX "TXT"
 // in: route
 // directory entry
 // cluster list
@@ -47,11 +51,14 @@ int main() {
 
     BYTE entry[DIRECTORY_SIZE] = {0}; // size of directory entry is 32-byte 
     BYTE filename[SHORT_FILENAME_LEN + 1] = {0};
+    BYTE filesuffix[SUFFIX_LEN + 1] = {0};
+    
     for (int i = 0; i < SECTOR_SIZE; i += DIRECTORY_SIZE)
     {
         memcpy(entry, buffer + i, DIRECTORY_SIZE);
         memcpy(filename, entry, SHORT_FILENAME_LEN);
-        if (strcmp(filename, "WANGQUAN") == 0)
+        memcpy(filesuffix, entry + SHORT_FILENAME_LEN, SUFFIX_LEN);
+        if ((strcmp(filename, FILE_NAME) == 0) && (strcmp(filesuffix, FILE_SUFFIX) == 0))
         {
             puts("File entry found.");
             break;
