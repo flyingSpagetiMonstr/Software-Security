@@ -8,3 +8,5 @@ Adjust these 2 lines in disk.c to alter filename：
 ```
 - match them with the short file name of your own file
 - and make sure to capitalize them
+
+Modify the line "FC output.txt F:\WANGQUAN.txt" in disk.cmd to select the 2 files to compare.

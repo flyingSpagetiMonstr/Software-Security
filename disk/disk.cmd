@@ -1,6 +1,8 @@
 D: 
 
-cd "Code\C\Software Security\disk\" 
+@REM cd "Code\C\Software Security\disk\" 
+
+cd /d %~dp0
 
 gcc disk.c -o disk
 

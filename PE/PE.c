@@ -2,11 +2,8 @@
 #include <Windows.h>
 
 
-typedef WINBASEAPI WINBOOL WINAPI (*io_func)(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
+typedef WINBASEAPI WINBOOL WINAPI (*io_func)(HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
 void io(io_func operation, BYTE *buffer, int size/*by Byte*/, HANDLE file, int offset_start/*FILE_BEGIN*/, LONG offset);
-//   WINBASEAPI WINBOOL WINAPI ReadFile (HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
-
-
 // void read(BYTE *buffer, int size/*by Byte*/, HANDLE file, int offset_start/*FILE_BEGIN*/, LONG offset);
 
 int main()
@@ -35,10 +32,9 @@ int main()
     {
         IMAGE_SECTION_HEADER new_sect_header = {"V header", 0, 0, 0, 0, 0, 0, 0, 0, 0};
     }
-    
 
-    // BYTE *ptr = (BYTE*)(&i_nt_headers);
-    // for (int i = 0; i < sizeof(i_nt_headers); i++)
+    // BYTE *ptr = (BYTE*)(&i_dos_header);
+    // for (int i = 0; i < sizeof(i_dos_header); i++)
     // {
     //     printf("%02X ", ptr[i]);
     //     if ((i+1) % 0x10 ==  0)
@@ -46,8 +42,6 @@ int main()
     //         puts("");
     //     }
     // }
-
-
 }
 
 void io(io_func operation, BYTE *buffer, int size/*by Byte*/, HANDLE file, int offset_start/*FILE_BEGIN*/, LONG offset)
