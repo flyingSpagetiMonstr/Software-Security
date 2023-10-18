@@ -1,9 +1,5 @@
 {
     "files.associations": {
-        "windows.h": "c",
-        "stdio.h": "c",
-        "stdint.h": "c",
-        "assert.h": "c",
-        "string.h": "c"
+        "stdio.h": "c"
     }
 }
