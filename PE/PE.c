@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <assert.h>
 #include <Windows.h>
 
 
 typedef WINBASEAPI WINBOOL WINAPI (*io_func)(HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
+//   WINBASEAPI WINBOOL WINAPI WriteFile (HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
 void io(io_func operation, BYTE *buffer, int size/*by Byte*/, HANDLE file, int offset_start/*FILE_BEGIN*/, LONG offset);
 // void read(BYTE *buffer, int size/*by Byte*/, HANDLE file, int offset_start/*FILE_BEGIN*/, LONG offset);
 
@@ -14,24 +16,36 @@ int main()
         puts("Failed to open the disk.");
         exit(1);
     }
-    IMAGE_DOS_HEADER i_dos_header;
+    IMAGE_DOS_HEADER i_dos_header = {0};
     io(ReadFile, (BYTE*)&i_dos_header, sizeof(i_dos_header), file, FILE_BEGIN, 0);
-    IMAGE_NT_HEADERS i_nt_headers;
+    IMAGE_NT_HEADERS i_nt_headers = {0};
     io(ReadFile, (BYTE*)&i_nt_headers, sizeof(i_nt_headers), file, FILE_BEGIN, i_dos_header.e_lfanew);
+
+    puts("Iterating through section headers...");
+    IMAGE_SECTION_HEADER i_sect_header = {0};
+    for (int i = 0; i < i_nt_headers.FileHeader.NumberOfSections; i++)
+    {
+        io(ReadFile, (BYTE*)&i_sect_header, sizeof(i_sect_header), file, FILE_CURRENT, i_dos_header.e_lfanew);
+        puts(i_sect_header.Name);
+    }
+    
+
          
-    // position of end of IMAGE_SECTION_HEADERs
+    // create new section header
+    // position of end of IMAGE_SECTION_HEADERs (from FILE_BEGIN)
     int position = i_dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS) 
         + i_nt_headers.FileHeader.NumberOfSections*sizeof(IMAGE_SECTION_HEADER);
 
     int space = i_nt_headers.OptionalHeader.FileAlignment 
         - position % i_nt_headers.OptionalHeader.FileAlignment;
+    // printf("space: %d byte\n", space);
+    // printf("need: %d byte\n", sizeof(IMAGE_SECTION_HEADER));
+    assert(space >= sizeof(IMAGE_SECTION_HEADER));
+    IMAGE_SECTION_HEADER new_sect_header = {"V header", 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    io(WriteFile, (BYTE*)&new_sect_header, sizeof(new_sect_header), file, FILE_BEGIN, position);
+    i_nt_headers.FileHeader.NumberOfSections += 1;
+    io(WriteFile, (BYTE*)&i_nt_headers, sizeof(i_nt_headers), file, FILE_BEGIN, i_dos_header.e_lfanew);
 
-    printf("space: %d byte\n", space);
-    printf("need: %d byte\n", sizeof(IMAGE_SECTION_HEADER));
-    if (space >= sizeof(IMAGE_SECTION_HEADER))
-    {
-        IMAGE_SECTION_HEADER new_sect_header = {"V header", 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    }
 
     // BYTE *ptr = (BYTE*)(&i_dos_header);
     // for (int i = 0; i < sizeof(i_dos_header); i++)

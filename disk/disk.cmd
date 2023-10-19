@@ -1,4 +1,4 @@
-D: 
+@REM D: 
 
 @REM cd "Code\C\Software Security\disk\" 
 
