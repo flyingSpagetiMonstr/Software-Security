@@ -1,3 +1,6 @@
+#disk
+the code concatenate/display the content of a given file(the filename is given) by reading raw bytes of a FAT32 file system.
+
 Run disk.c/disk.exe to read disk and recreate the file. \
 Run disk.cmd to run both disk.c and FC(file compare).
 
