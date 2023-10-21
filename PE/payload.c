@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <stdio.h>
 
-void fun()
+void fun();
 // int main() {
 //     HMODULE hDLL = LoadLibrary("user32.dll"); // Load the user32.dll library as an example
 
