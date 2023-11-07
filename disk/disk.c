@@ -87,7 +87,7 @@ int main() {
         read(ptr, sector_per_cluster*SECTOR_SIZE, disk, FILE_BEGIN, content_sector); 
         ptr += sector_per_cluster*SECTOR_SIZE;
         cluster_no = data_parse(buffer + cluster_no*FAT_ENTRY_SIZE, FAT_ENTRY_SIZE);
-    }
+    } 
 
     FILE* output = fopen("output.txt", "wb");
     fwrite(content, file_size, 1, output);
